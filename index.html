@@ -1,10 +1,95 @@
-<h1 id="num"></h1><br>
-<main class="px-3">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>z2FA Codes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+            crossorigin="anonymous"></script>
+    <script src="cache.js"></script>
+</head>
+<body>
+<style>
+    #main-container {
+        padding-bottom: 50px;
+        overflow: scroll;
+    }
 
+    #add-code {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+</style>
+<div class="container" id="main-container">
 
+    <div class="progress" style="margin-top: 10px;margin-bottom: 10px">
+        <div class="progress-bar" id=progress-bar" style="width: 10%"></div>
+    </div>
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">Name</th>
+            <th scope="col">Code</th>
+            <th scope="col"></th>
+        </tr>
+        </thead>
+        <tbody id="codes">
+        </tbody>
+    </table>
 
-</main>
+    <!-- Button trigger modal -->
+    <button id="add-code" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#codeModal">
+        Add new code
+    </button>
+
+    <!-- Modal -->
+    <div class="modal fade" id="codeModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">New code</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="mark" class="form-label">Mark</label>
+                        <input type="text" class="form-control" id="mark">
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="text" class="form-control" id="password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="saveForm();">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    const cacheName = '2fa-codes';
+    let codes = cache.get(cacheName);
+
+    function saveForm() {
+        codes = cache.get(cacheName);
+        if (!codes) {
+            codes = {};
+        }
+        const mark = document.getElementById('mark').value;
+        const password = document.getElementById('password').value;
+        codes[mark] = password;
+        cache.set(cacheName, codes, 0);
+        window.location.reload();
+    }
     // Функция для получения SHA-256 хэша
     async function sha256(message) {
         const msgBuffer = new TextEncoder().encode(message);
@@ -20,14 +105,34 @@
         const combinedString = currentTimeUTC + inputString;
         const hash = await sha256(combinedString);
         const hashNumber = parseInt(hash.substring(0, 15), 16);
-        const hashNumberStr = (hashNumber+'').substring(0, 10);
+        const hashNumberStr = (hashNumber + '').substring(0, 10);
         const code = hashNumberStr.slice(-6);
         return code;
     }
 
-    setInterval(async function () {
-        const code = await generateCode("exampleString");
-        document.getElementById('num').innerHTML = code;
-    }, 1000);
 
+    async function generateCodes() {
+        let html = '';
+        let codes = cache.get(cacheName);
+        if (codes) {
+            for (i in codes) {
+                let code = await generateCode(codes[i]);
+                html += '<tr>\n' +
+                    '            <td>' + i + '</td>\n' +
+                    '            <td>\n' +
+                    '                <h4>' + code + '</h4>\n' +
+                    '            </td>\n' +
+                    '            <td></td>\n' +
+                    '        </tr>';
+            }
+        }
+        document.getElementById('codes').innerHTML = html;
+    }
+
+    generateCodes()
+    setInterval(async function () {
+        generateCodes();
+    }, 10000);
 </script>
+</body>
+</html>
