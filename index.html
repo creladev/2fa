@@ -145,7 +145,7 @@
     function updateProgress() {
         const progressElement = document.getElementById('progress-bar');
         const progress = getMinuteProgress();
-        if (progress < 1) {
+        if (progress < 3) {
             generateCodes();
         }
         progressElement.style = 'width:' + progress + '%;';
