@@ -29,7 +29,7 @@
 <div class="container" id="main-container">
 
     <div class="progress" style="margin-top: 10px;margin-bottom: 10px">
-        <div class="progress-bar" id=progress-bar" style="width: 10%"></div>
+        <div class="progress-bar" id='progress-bar' style="width: 10%"></div>
     </div>
     <table class="table">
         <thead>
@@ -90,6 +90,7 @@
         cache.set(cacheName, codes, 0);
         window.location.reload();
     }
+
     // Функция для получения SHA-256 хэша
     async function sha256(message) {
         const msgBuffer = new TextEncoder().encode(message);
@@ -129,10 +130,28 @@
         document.getElementById('codes').innerHTML = html;
     }
 
-    generateCodes()
-    setInterval(async function () {
-        generateCodes();
-    }, 10000);
+    generateCodes();
+
+    function getMinuteProgress() {
+        const currentTime = new Date();
+        const seconds = currentTime.getUTCSeconds();
+        const milliseconds = currentTime.getUTCMilliseconds();
+        const totalMilliseconds = (seconds * 1000) + milliseconds;
+        const progressPercentage = (totalMilliseconds / 60000) * 100;
+        return progressPercentage.toFixed(2); // Округлить до двух знаков после запятой
+    }
+
+    // Функция для обновления отображения прогресса
+    function updateProgress() {
+        const progressElement = document.getElementById('progress-bar');
+        const progress = getMinuteProgress();
+        if (progress < 1) {
+            generateCodes();
+        }
+        progressElement.style = 'width:' + progress + '%;';
+    }
+
+    setInterval(updateProgress, 1000);
 </script>
 </body>
 </html>
